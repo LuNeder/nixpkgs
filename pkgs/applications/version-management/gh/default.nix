@@ -1,17 +1,25 @@
-{ lib, fetchFromGitHub, buildGoModule, installShellFiles, stdenv, testers, gh }:
+{
+  lib,
+  fetchFromGitHub,
+  buildGoModule,
+  installShellFiles,
+  stdenv,
+  testers,
+  gh,
+}:
 
 buildGoModule rec {
   pname = "gh";
-  version = "2.56.0";
+  version = "2.60.0";
 
   src = fetchFromGitHub {
     owner = "cli";
     repo = "cli";
-    rev = "v${version}";
-    hash = "sha256-PDw2u+2hMiPmQe1lnJXnZk8JVsti/j7Nq5Uv3b7RIk4=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-Tvyf58f/9bOUiUAG6R9nhOerZh5Yt3LyKx88oF3s0jI=";
   };
 
-  vendorHash = "sha256-rMJWUm79/wBBdVvNdIQc7jqzxfDXphBvGYU3wD/BITk=";
+  vendorHash = "sha256-nwGmYFWyAr34F4rmqFC3cK+fbUq6LRaqXhekx4Ab5sE=";
 
   nativeBuildInputs = [ installShellFiles ];
 
@@ -21,19 +29,22 @@ buildGoModule rec {
     runHook postBuild
   '';
 
-  installPhase = ''
-    runHook preInstall
-    install -Dm755 bin/gh -t $out/bin
-   '' + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
-    installManPage share/man/*/*.[1-9]
+  installPhase =
+    ''
+      runHook preInstall
+      install -Dm755 bin/gh -t $out/bin
+    ''
+    + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+      installManPage share/man/*/*.[1-9]
 
-    installShellCompletion --cmd gh \
-      --bash <($out/bin/gh completion -s bash) \
-      --fish <($out/bin/gh completion -s fish) \
-      --zsh <($out/bin/gh completion -s zsh)
-  '' + ''
-    runHook postInstall
-  '';
+      installShellCompletion --cmd gh \
+        --bash <($out/bin/gh completion -s bash) \
+        --fish <($out/bin/gh completion -s fish) \
+        --zsh <($out/bin/gh completion -s zsh)
+    ''
+    + ''
+      runHook postInstall
+    '';
 
   # most tests require network access
   doCheck = false;

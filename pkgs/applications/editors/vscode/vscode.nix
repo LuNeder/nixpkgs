@@ -1,4 +1,5 @@
 { stdenv
+, stdenvNoCC
 , lib
 , callPackage
 , fetchurl
@@ -10,9 +11,9 @@
 # documented in https://wiki.nixos.org/wiki/Visual_Studio_Code#Insiders_Build
 # On MacOS the insider binary is still called code instead of code-insiders as
 # of 2023-08-06.
-, sourceExecutableName ? "code" + lib.optionalString (isInsiders && stdenv.isLinux) "-insiders"
+, sourceExecutableName ? "code" + lib.optionalString (isInsiders && stdenv.hostPlatform.isLinux) "-insiders"
 , commandLineArgs ? ""
-, useVSCodeRipgrep ? stdenv.isDarwin
+, useVSCodeRipgrep ? stdenv.hostPlatform.isDarwin
 }:
 
 let
@@ -27,24 +28,24 @@ let
     armv7l-linux = "linux-armhf";
   }.${system} or throwSystem;
 
-  archive_fmt = if stdenv.isDarwin then "zip" else "tar.gz";
+  archive_fmt = if stdenv.hostPlatform.isDarwin then "zip" else "tar.gz";
 
   sha256 = {
-    x86_64-linux = "0glnqj8kr7m6dq5nbygjwlgim8cngrh3idc10zp05rg0n364906v";
-    x86_64-darwin = "18xy36jha1ixd8lb0dg045ld9qivyjlds90i2k6rh974mx8jl7rj";
-    aarch64-linux = "1hdjmfjpdycsj78dfsjyidpg8mx7s66b4sb7xih87vfqvzhfmyw2";
-    aarch64-darwin = "1xjqq5fz8blprxjnck8zbn933y7kgx1hnq3nc887kp7q0879p9kr";
-    armv7l-linux = "07rnkswy2lv8wad0iiaknrd329bj1hdadzcklgd34dmqpgr28lij";
+    x86_64-linux = "1dysz5yajm9v8p8x19lmbhbfij5k99h9m39ifvn1908dhgyc5d36";
+    x86_64-darwin = "175sxw1z6mzs5adcgy2902irp0yb666lgmrckbd3dr7rqfav9d36";
+    aarch64-linux = "04pf8b42kh23pii9qahsdf3979icvqbhadr5m8x79y16hv1h2h8j";
+    aarch64-darwin = "1766h2awzh8wjwzkc7r1ymsjyh4j7rfb7nj6bpigy2b2dyfp53w2";
+    armv7l-linux = "1zmqrvqq07vkhmb9shbrh2jjkv3rpvi3pv0b1cg690jfixnsyk04";
   }.${system} or throwSystem;
 in
   callPackage ./generic.nix rec {
     # Please backport all compatible updates to the stable release.
     # This is important for the extension ecosystem.
-    version = "1.93.0";
+    version = "1.95.1";
     pname = "vscode" + lib.optionalString isInsiders "-insiders";
 
     # This is used for VS Code - Remote SSH test
-    rev = "4849ca9bdf9666755eb463db297b69e5385090e3";
+    rev = "65edc4939843c90c34d61f4ce11704f09d3e5cb6";
 
     executableName = "code" + lib.optionalString isInsiders "-insiders";
     longName = "Visual Studio Code" + lib.optionalString isInsiders " - Insiders";
@@ -68,8 +69,9 @@ in
       src = fetchurl {
         name = "vscode-server-${rev}.tar.gz";
         url = "https://update.code.visualstudio.com/commit:${rev}/server-linux-x64/stable";
-        sha256 = "00yjdgb48mclaamv8c9rz5d6p9pbqrik3y1pj60qqpqf29cj5p9s";
+        sha256 = "05w76c50j85b7hc0q8gjzssy142ncbns0kmcyqydaqrzj8n41jd8";
       };
+      stdenv = stdenvNoCC;
     };
 
     tests = { inherit (nixosTests) vscode-remote-ssh; };
@@ -79,7 +81,7 @@ in
     # Editing the `code` binary within the app bundle causes the bundle's signature
     # to be invalidated, which prevents launching starting with macOS Ventura, because VS Code is notarized.
     # See https://eclecticlight.co/2022/06/17/app-security-changes-coming-in-ventura/ for more information.
-    dontFixup = stdenv.isDarwin;
+    dontFixup = stdenv.hostPlatform.isDarwin;
 
     meta = with lib; {
       description = ''

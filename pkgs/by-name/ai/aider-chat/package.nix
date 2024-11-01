@@ -12,7 +12,7 @@ let
     self = python3;
     packageOverrides = _: super: { tree-sitter = super.tree-sitter_0_21; };
   };
-  version = "0.56.0";
+  version = "0.60.0";
 in
 python3.pkgs.buildPythonApplication {
   pname = "aider-chat";
@@ -20,56 +20,100 @@ python3.pkgs.buildPythonApplication {
   pyproject = true;
 
   src = fetchFromGitHub {
-    owner = "paul-gauthier";
+    owner = "Aider-AI";
     repo = "aider";
     rev = "refs/tags/v${version}";
-    hash = "sha256-e0Fqj67vYt41Zbr1FN2fuLp6cHRius8RtacBHLgB9dM=";
+    hash = "sha256-0jAdUcGGJzxvTKY/56an0oLEghZHz6fdNLg8cPer1Qc=";
   };
 
   pythonRelaxDeps = true;
 
   build-system = with python3.pkgs; [ setuptools-scm ];
 
-  dependencies =
-    with python3.pkgs;
-    [
-      aiohappyeyeballs
-      backoff
-      beautifulsoup4
-      configargparse
-      diff-match-patch
-      diskcache
-      flake8
-      gitpython
-      grep-ast
-      importlib-resources
-      json5
-      jsonschema
-      jiter
-      litellm
-      networkx
-      numpy
-      packaging
-      pathspec
-      pillow
-      playwright
-      prompt-toolkit
-      pypager
-      pypandoc
-      pyperclip
-      pyyaml
-      rich
-      scipy
-      sounddevice
-      soundfile
-      streamlit
-      tokenizers
-      watchdog
-    ]
-    ++ lib.optionals (!tensorflow.meta.broken) [
-      llama-index-core
-      llama-index-embeddings-huggingface
-    ];
+  dependencies = with python3.pkgs; [
+    aiohappyeyeballs
+    aiohttp
+    aiosignal
+    annotated-types
+    anyio
+    attrs
+    backoff
+    beautifulsoup4
+    certifi
+    cffi
+    charset-normalizer
+    click
+    configargparse
+    diff-match-patch
+    diskcache
+    distro
+    filelock
+    flake8
+    frozenlist
+    fsspec
+    gitdb
+    gitpython
+    grep-ast
+    h11
+    httpcore
+    httpx
+    huggingface-hub
+    idna
+    importlib-resources
+    jinja2
+    jiter
+    json5
+    jsonschema
+    jsonschema-specifications
+    litellm
+    markdown-it-py
+    markupsafe
+    mccabe
+    mdurl
+    multidict
+    networkx
+    numpy
+    openai
+    packaging
+    pathspec
+    pexpect
+    pillow
+    prompt-toolkit
+    psutil
+    ptyprocess
+    pycodestyle
+    pycparser
+    pydantic
+    pydantic-core
+    pydub
+    pyflakes
+    pygments
+    pypandoc
+    pyperclip
+    python-dotenv
+    pyyaml
+    referencing
+    regex
+    requests
+    rich
+    rpds-py
+    scipy
+    smmap
+    sniffio
+    sounddevice
+    soundfile
+    soupsieve
+    tiktoken
+    tokenizers
+    tqdm
+    tree-sitter
+    tree-sitter-languages
+    typing-extensions
+    urllib3
+    wcwidth
+    yarl
+    zipp
+  ];
 
   buildInputs = [ portaudio ];
 
@@ -93,6 +137,8 @@ python3.pkgs.buildPythonApplication {
       "test_browser_flag_imports_streamlit"
       # AttributeError
       "test_simple_send_with_retries"
+      # Expected 'check_version' to have been called once
+      "test_main_exit_calls_version_check"
     ]
     ++ lib.optionals stdenv.hostPlatform.isDarwin [
       # Tests fails on darwin
@@ -102,6 +148,7 @@ python3.pkgs.buildPythonApplication {
 
   preCheck = ''
     export HOME=$(mktemp -d)
+    export AIDER_CHECK_UPDATE=false
   '';
 
   meta = {

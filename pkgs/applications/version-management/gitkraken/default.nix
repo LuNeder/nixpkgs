@@ -37,7 +37,7 @@
   makeDesktopItem,
   openssl,
   wrapGAppsHook3,
-  makeShellWrapper,
+  buildPackages,
   at-spi2-atk,
   at-spi2-core,
   libuuid,
@@ -57,24 +57,24 @@
 
 let
   pname = "gitkraken";
-  version = "10.3.0";
+  version = "10.4.1";
 
   throwSystem = throw "Unsupported system: ${stdenv.hostPlatform.system}";
 
   srcs = {
     x86_64-linux = fetchzip {
       url = "https://release.axocdn.com/linux/GitKraken-v${version}.tar.gz";
-      hash = "sha256-5WICLLuv+NL++fgm7p/ScyEvzwVqcXNI6eXGr4e9k20=";
+      hash = "sha256-ZvLDGhBnWjjWqzwqJOz91X8hr94jkXtMA8CL2hh9mlI=";
     };
 
     x86_64-darwin = fetchzip {
       url = "https://release.axocdn.com/darwin/GitKraken-v${version}.zip";
-      hash = "sha256-zkQQR90pdYGIZf3OmAdKc1SlotgdSRGJaYsA1n74aZk=";
+      hash = "sha256-21VwDFw2dyySoc4NC/RR3k/VtksqaZ5vkdx0z5MKqLc=";
     };
 
     aarch64-darwin = fetchzip {
       url = "https://release.axocdn.com/darwin-arm64/GitKraken-v${version}.zip";
-      hash = "sha256-WYBXupyunpAaoHmA4dHfd/oruP20rYsIq5mO4/dDsoM=";
+      hash = "sha256-N8WMbJFC74tIeJ6Yyk58nT+sIBYN/7PNLdYNxGSB2yM=";
     };
   };
 
@@ -166,7 +166,9 @@ let
 
     nativeBuildInputs = [
       copyDesktopItems
-      (wrapGAppsHook3.override { makeWrapper = makeShellWrapper; })
+      # override doesn't preserve splicing https://github.com/NixOS/nixpkgs/issues/132651
+      # Has to use `makeShellWrapper` from `buildPackages` even though `makeShellWrapper` from the inputs is spliced because `propagatedBuildInputs` would pick the wrong one because of a different offset.
+      (buildPackages.wrapGAppsHook3.override { makeWrapper = buildPackages.makeShellWrapper; })
     ];
     buildInputs = [
       gtk3
@@ -249,4 +251,4 @@ let
     dontFixup = true;
   };
 in
-if stdenv.isDarwin then darwin else linux
+if stdenv.hostPlatform.isDarwin then darwin else linux
