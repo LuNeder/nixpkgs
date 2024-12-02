@@ -954,6 +954,7 @@ let
     }
     // lib.optionalAttrs (lib.versionAtLeast metadata.release_version "16") {
       mlir = callPackage ./mlir { };
+      flang = callPackage ./flang { };
       libclc = callPackage ./libclc.nix { };
     }
     // lib.optionalAttrs (lib.versionAtLeast metadata.release_version "19") {
