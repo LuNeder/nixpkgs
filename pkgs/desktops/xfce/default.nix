@@ -15,23 +15,7 @@ makeScopeWithSplicing' {
       inherit (self) callPackage;
     in
     {
-      #### NixOS support
-
-      genericUpdater = pkgs.genericUpdater;
-
-      mkXfceDerivation = callPackage ./mkXfceDerivation.nix { };
-
       #### CORE
-
-      exo = callPackage ./core/exo { };
-
-      garcon = callPackage ./core/garcon { };
-
-      libxfce4ui = callPackage ./core/libxfce4ui { };
-
-      libxfce4util = callPackage ./core/libxfce4util { };
-
-      libxfce4windowing = callPackage ./core/libxfce4windowing { };
 
       thunar-unwrapped = callPackage ./core/thunar { };
 
@@ -49,23 +33,17 @@ makeScopeWithSplicing' {
 
       tumbler = callPackage ./core/tumbler { };
 
-      xfce4-panel = callPackage ./core/xfce4-panel { };
-
       xfce4-session = callPackage ./core/xfce4-session { };
 
       xfce4-settings = callPackage ./core/xfce4-settings { };
 
       xfce4-power-manager = callPackage ./core/xfce4-power-manager { };
 
-      xfconf = callPackage ./core/xfconf { };
-
       xfdesktop = callPackage ./core/xfdesktop { };
 
       xfwm4 = callPackage ./core/xfwm4 { };
 
       xfce4-appfinder = callPackage ./core/xfce4-appfinder { };
-
-      xfce4-dev-tools = callPackage ./core/xfce4-dev-tools { };
 
       #### APPLICATIONS
 
@@ -166,22 +144,30 @@ makeScopeWithSplicing' {
     }
     // lib.optionalAttrs config.allowAliases {
       #### ALIASES
+      genericUpdater = throw "xfce.genericUpdater has been removed: use pkgs.genericUpdater directly"; # added 2025-12-22
 
-      automakeAddFlags = throw "xfce.automakeAddFlags has been removed: this setup-hook is no longer used in Nixpkgs"; # added 2024-03-24
-
-      xinitrc = self.xfce4-session.xinitrc; # added 2019-11-04
-
-      thunar-bare = self.thunar-unwrapped; # added 2019-11-04
+      mkXfceDerivation = lib.warnOnInstantiate ''
+        xfce.mkXfceDerivation has been deprecated, please use stdenv.mkDerivation
+        directly. You can migrate by adding `pkg-config`, `xfce4-dev-tools`, and
+        `wrapGAppsHook3` to your nativeBuildInputs and `--enable-maintainer-mode`
+        to your configureFlags.
+      '' (callPackage ./mkXfceDerivation.nix { }); # added 2025-12-22
 
       xfce4-datetime-plugin = throw ''
         xfce4-datetime-plugin has been removed: this plugin has been merged into the xfce4-panel's built-in clock
         plugin and thus no longer maintained upstream, see https://gitlab.xfce.org/xfce/xfce4-panel/-/issues/563.
       ''; # Added 2025-05-20
-
-      xfce4-embed-plugin = throw "xfce4-embed-plugin has been removed, as it was broken"; # Added 2024-07-15
-
-      xfce4-hardware-monitor-plugin = throw "xfce.xfce4-hardware-monitor-plugin has been removed: abandoned by upstream and does not build"; # added 2023-01-15
-      xfce4-namebar-plugin = throw "xfce.xfce4-namebar-plugin has been removed: abandoned by upstream and does not build"; # added 2024-05-08
     }
   );
+}
+// lib.optionalAttrs config.allowAliases {
+  # These aliases need to be placed outside the scope or they will shadow the attributes from parent scope.
+  exo = lib.warnOnInstantiate "‘xfce.exo’ was moved to top-level. Please use ‘pkgs.xfce4-exo’ directly" pkgs.xfce4-exo; # Added on 2025-12-23
+  garcon = lib.warnOnInstantiate "‘xfce.garcon’ was moved to top-level. Please use ‘pkgs.garcon’ directly" pkgs.garcon; # Added on 2025-12-23
+  libxfce4ui = lib.warnOnInstantiate "‘xfce.libxfce4ui’ was moved to top-level. Please use ‘pkgs.libxfce4ui’ directly" pkgs.libxfce4ui; # Added on 2025-12-23
+  libxfce4util = lib.warnOnInstantiate "‘xfce.libxfce4util’ was moved to top-level. Please use ‘pkgs.libxfce4util’ directly" pkgs.libxfce4util; # Added on 2025-12-23
+  libxfce4windowing = lib.warnOnInstantiate "‘xfce.libxfce4windowing’ was moved to top-level. Please use ‘pkgs.libxfce4windowing’ directly" pkgs.libxfce4windowing; # Added on 2025-12-23
+  xfce4-dev-tools = lib.warnOnInstantiate "‘xfce.xfce4-dev-tools’ was moved to top-level. Please use ‘pkgs.xfce4-dev-tools’ directly" pkgs.xfce4-dev-tools; # Added on 2025-12-23
+  xfce4-panel = lib.warnOnInstantiate "‘xfce.xfce4-panel’ was moved to top-level. Please use ‘pkgs.xfce4-panel’ directly" pkgs.xfce4-panel; # Added on 2025-12-23
+  xfconf = lib.warnOnInstantiate "‘xfce.xfconf’ was moved to top-level. Please use ‘pkgs.xfconf’ directly" pkgs.xfconf; # Added on 2025-12-23
 }

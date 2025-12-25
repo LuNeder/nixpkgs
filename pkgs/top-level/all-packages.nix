@@ -918,7 +918,7 @@ with pkgs;
   };
 
   wrapGAppsNoGuiHook = callPackage ../build-support/setup-hooks/wrap-gapps-hook {
-    makeWrapper = buildPackages.makeBinaryWrapper;
+    makeWrapper = makeBinaryWrapper;
   };
 
   separateDebugInfo = makeSetupHook {
@@ -2896,8 +2896,6 @@ with pkgs;
 
   hyphenDicts = recurseIntoAttrs (callPackages ../development/libraries/hyphen/dictionaries.nix { });
 
-  icemon = libsForQt5.callPackage ../applications/networking/icemon { };
-
   icepeak = haskell.lib.compose.justStaticExecutables haskellPackages.icepeak;
 
   ihaskell = callPackage ../development/tools/haskell/ihaskell/wrapper.nix {
@@ -4233,24 +4231,6 @@ with pkgs;
   };
 
   inherit (coqPackages_9_0) compcert;
-
-  computecpp = wrapCCWith rec {
-    cc = computecpp-unwrapped;
-    extraPackages = [
-      llvmPackages.compiler-rt
-    ];
-    extraBuildCommands = ''
-      wrap compute $wrapper $ccPath/compute
-      wrap compute++ $wrapper $ccPath/compute++
-      export named_cc=compute
-      export named_cxx=compute++
-
-      rsrc="$out/resource-root"
-      mkdir -p "$rsrc/lib"
-      ln -s "${cc}/lib" "$rsrc/include"
-      echo "-resource-dir=$rsrc" >> $out/nix-support/cc-cflags
-    '';
-  };
 
   corretto11 = javaPackages.compiler.corretto11;
   corretto17 = javaPackages.compiler.corretto17;
@@ -5758,7 +5738,7 @@ with pkgs;
     mkRuby
     ruby_3_3
     ruby_3_4
-    ruby_3_5
+    ruby_4_0
     ;
 
   ruby = ruby_3_3;
@@ -5766,7 +5746,7 @@ with pkgs;
 
   rubyPackages_3_3 = recurseIntoAttrs ruby_3_3.gems;
   rubyPackages_3_4 = recurseIntoAttrs ruby_3_4.gems;
-  rubyPackages_3_5 = recurseIntoAttrs ruby_3_5.gems;
+  rubyPackages_4_0 = recurseIntoAttrs ruby_4_0.gems;
 
   inherit (callPackages ../applications/networking/cluster/spark { })
     spark_4_0
@@ -8631,6 +8611,11 @@ with pkgs;
   go_1_25 = callPackage ../development/compilers/go/1.25.nix { };
   buildGo125Module = callPackage ../build-support/go/module.nix {
     go = buildPackages.go_1_25;
+  };
+
+  go_1_26 = callPackage ../development/compilers/go/1.26.nix { };
+  buildGo126Module = callPackage ../build-support/go/module.nix {
+    go = buildPackages.go_1_26;
   };
 
   ### DEVELOPMENT / HARE
@@ -12468,10 +12453,6 @@ with pkgs;
     inherit (haskellPackages) ghcWithPackages;
   };
 
-  xmonad_log_applet = callPackage ../applications/window-managers/xmonad/log-applet {
-    inherit (xfce) libxfce4util xfce4-panel;
-  };
-
   xmonad_log_applet_mate = xmonad_log_applet.override {
     desktopSupport = "mate";
   };
@@ -13959,10 +13940,6 @@ with pkgs;
   vimb = wrapFirefox vimb-unwrapped { };
 
   vivisect = with python3Packages; toPythonApplication (vivisect.override { withGui = true; });
-
-  vokoscreen = libsForQt5.callPackage ../applications/video/vokoscreen {
-    ffmpeg = ffmpeg-full;
-  };
 
   py-wacz = with python3Packages; toPythonApplication wacz;
 

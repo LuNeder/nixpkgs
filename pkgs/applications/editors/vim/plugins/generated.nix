@@ -3182,6 +3182,19 @@ final: prev: {
     meta.hydraPlatforms = [ ];
   };
 
+  codesettings-nvim = buildVimPlugin {
+    pname = "codesettings.nvim";
+    version = "1.5.3-unstable-2025-12-21";
+    src = fetchFromGitHub {
+      owner = "mrjones2014";
+      repo = "codesettings.nvim";
+      rev = "67d59b4a5735477817a9cd34fe94a01d386da272";
+      hash = "sha256-XbcSAZbTc19NEtP2bW7ULEV0QJpghGY4Kt7KRjSqjsk=";
+    };
+    meta.homepage = "https://github.com/mrjones2014/codesettings.nvim/";
+    meta.hydraPlatforms = [ ];
+  };
+
   codewindow-nvim = buildVimPlugin {
     pname = "codewindow.nvim";
     version = "0-unstable-2025-05-22";
@@ -12268,6 +12281,19 @@ final: prev: {
       hash = "sha256-20/J2CNCpRNmmx28b+ZhIT+dHP+iTeeYr7GA/2coFQE=";
     };
     meta.homepage = "https://github.com/obsidian-nvim/obsidian.nvim/";
+    meta.hydraPlatforms = [ ];
+  };
+
+  ocaml-nvim = buildVimPlugin {
+    pname = "ocaml.nvim";
+    version = "2025-12-02";
+    src = fetchFromGitHub {
+      owner = "tarides";
+      repo = "ocaml.nvim";
+      rev = "f13728bbedb02121ee54633465ac392bbf0a8e79";
+      sha256 = "140hh72x96ihzg766rv1nn8x4la27xycxxaqym3vv0wi5jd5v1sx";
+    };
+    meta.homepage = "https://github.com/tarides/ocaml.nvim/";
     meta.hydraPlatforms = [ ];
   };
 

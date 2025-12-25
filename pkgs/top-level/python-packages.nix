@@ -13021,6 +13021,8 @@ self: super: with self; {
 
   pycairo = callPackage ../development/python-modules/pycairo { inherit (pkgs.buildPackages) meson; };
 
+  pycambia = callPackage ../development/python-modules/pycambia { };
+
   pycangjie = callPackage ../development/python-modules/pycangjie {
     inherit (pkgs.buildPackages) meson;
   };
@@ -13114,8 +13116,6 @@ self: super: with self; {
   pycparser = callPackage ../development/python-modules/pycparser { };
 
   pycrashreport = callPackage ../development/python-modules/pycrashreport { };
-
-  pycrc = callPackage ../development/python-modules/pycrc { };
 
   pycrdt = callPackage ../development/python-modules/pycrdt { };
 
@@ -13976,6 +13976,8 @@ self: super: with self; {
 
   pynina = callPackage ../development/python-modules/pynina { };
 
+  pynintendoauth = callPackage ../development/python-modules/pynintendoauth { };
+
   pynintendoparental = callPackage ../development/python-modules/pynintendoparental { };
 
   pynipap = callPackage ../development/python-modules/pynipap { };
@@ -14115,6 +14117,8 @@ self: super: with self; {
   pyowm = callPackage ../development/python-modules/pyowm { };
 
   pyoxigraph = callPackage ../development/python-modules/pyoxigraph { };
+
+  pyoxipng = callPackage ../development/python-modules/pyoxipng { };
 
   pypager = callPackage ../development/python-modules/pypager { };
 
