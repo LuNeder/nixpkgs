@@ -121,7 +121,7 @@ in
 
       serviceConfig = {
         ExecStart = getExe cfg.package;
-        StateDirectory = cfg.settings.dataDir;
+        StateDirectory = "actual";
         RuntimeDirectory = "actual";
         WorkingDirectory = cfg.settings.dataDir;
         LimitNOFILE = "1048576";
