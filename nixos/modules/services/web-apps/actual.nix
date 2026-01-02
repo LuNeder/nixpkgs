@@ -37,7 +37,7 @@ in
       description = ''
         User account under which Actual runs.
 
-        If null is specified (default), a temporary user will be created by systemd. Otherwise won't be automatically created by the service.
+        If null is specified (default), a temporary user will be created by systemd.
       '';
     };
 
@@ -47,7 +47,7 @@ in
       description = ''
         Group account under which Actual runs.
 
-        If null is specified (default), a temporary user will be created by systemd. Otherwise won't be automatically created by the service.
+        If null is specified (default), a temporary user will be created by systemd.
       '';
     };
 
@@ -121,7 +121,7 @@ in
 
       serviceConfig = {
         ExecStart = getExe cfg.package;
-        StateDirectory = "actual";
+        StateDirectory = cfg.settings.dataDir;
         RuntimeDirectory = "actual";
         WorkingDirectory = cfg.settings.dataDir;
         LimitNOFILE = "1048576";
@@ -145,11 +145,7 @@ in
         ProtectProc = "invisible";
         ProcSubset = "pid";
         ProtectSystem = "strict";
-        ReadWritePaths = [
-          cfg.settings.dataDir
-          cfg.settings.serverFiles
-          cfg.settings.userFiles
-        ];
+        ReadWritePaths = cfg.settings.dataDir;
         RestrictAddressFamilies = [
           "AF_INET"
           "AF_INET6"
