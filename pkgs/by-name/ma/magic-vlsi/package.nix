@@ -7,7 +7,7 @@
   python3,
   m4,
   cairo,
-  libX11,
+  libx11,
   mesa,
   mesa_glu,
   ncurses,
@@ -53,9 +53,8 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     cairo
-    libX11
+    libx11
     m4
-    mesa
     mesa_glu
     ncurses
     tcl

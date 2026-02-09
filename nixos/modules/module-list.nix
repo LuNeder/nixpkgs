@@ -779,7 +779,7 @@
   ./services/mail/rss2email.nix
   ./services/mail/schleuder.nix
   ./services/mail/spamassassin.nix
-  ./services/mail/stalwart-mail.nix
+  ./services/mail/stalwart.nix
   ./services/mail/sympa.nix
   ./services/mail/tlsrpt.nix
   ./services/mail/zeyple.nix
@@ -843,6 +843,7 @@
   ./services/misc/dump1090-fa.nix
   ./services/misc/dwm-status.nix
   ./services/misc/dysnomia.nix
+  ./services/misc/elephant.nix
   ./services/misc/errbot.nix
   ./services/misc/ersatztv.nix
   ./services/misc/etebase-server.nix
