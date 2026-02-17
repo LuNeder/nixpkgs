@@ -74,6 +74,7 @@
   ./hardware/gpgsmartcards.nix
   ./hardware/graphics.nix
   ./hardware/hackrf.nix
+  ./hardware/hid-fanatecff.nix
   ./hardware/i2c.nix
   ./hardware/infiniband.nix
   ./hardware/inputmodule.nix
@@ -557,6 +558,7 @@
   ./services/desktops/blueman.nix
   ./services/desktops/bonsaid.nix
   ./services/desktops/cpupower-gui.nix
+  ./services/desktops/crossmacro.nix
   ./services/desktops/dleyna.nix
   ./services/desktops/dunst.nix
   ./services/desktops/espanso.nix
@@ -1657,6 +1659,7 @@
   ./services/web-apps/immich.nix
   ./services/web-apps/immichframe.nix
   ./services/web-apps/invidious.nix
+  ./services/web-apps/invoiceplane.nix
   ./services/web-apps/isso.nix
   ./services/web-apps/jirafeau.nix
   ./services/web-apps/jitsi-meet.nix
@@ -1713,6 +1716,7 @@
   ./services/web-apps/outline.nix
   ./services/web-apps/pairdrop.nix
   ./services/web-apps/part-db.nix
+  ./services/web-apps/pdfding.nix
   ./services/web-apps/peering-manager.nix
   ./services/web-apps/peertube-runner.nix
   ./services/web-apps/peertube.nix

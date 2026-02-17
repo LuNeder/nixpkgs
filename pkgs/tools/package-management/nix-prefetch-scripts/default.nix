@@ -36,8 +36,8 @@ let
       dontUnpack = true;
 
       installPhase = ''
-        install -vD ${src} $out/bin/$name;
-        wrapProgram $out/bin/$name \
+        install -vD ${src} $out/bin/$pname;
+        wrapProgram $out/bin/$pname \
           --prefix PATH : ${lib.makeBinPath (deps ++ [ coreutils ])} \
           --set HOME /homeless-shelter
       '';
@@ -71,6 +71,8 @@ rec {
     mkPrefetchScript "fossil" ../../../build-support/fetchfossil/nix-prefetch-fossil
       [
         fossil
+        gnugrep
+        gnused
       ];
   nix-prefetch-git = mkPrefetchScript "git" ../../../build-support/fetchgit/nix-prefetch-git [
     findutils
