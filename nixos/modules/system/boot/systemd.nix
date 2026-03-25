@@ -470,13 +470,17 @@ in
       '';
     };
 
-    sleep.extraConfig = mkOption {
-      default = "";
-      type = types.lines;
-      example = "HibernateDelaySec=1h";
+    sleep.settings.Sleep = mkOption {
+      default = { };
+      type = lib.types.submodule {
+        freeformType = types.attrsOf unitOption;
+      };
+      example = {
+        HibernateDelaySec = "1h";
+      };
       description = ''
-        Extra config options for systemd sleep state logic.
-        See {manpage}`sleep.conf.d(5)` man page for available options.
+        Options for systemd sleep state logic. See {manpage}`sleep.conf.d(5)` man page
+        for available options.
       '';
     };
 
@@ -637,10 +641,7 @@ in
 
         "systemd/system.conf".text = settingsToSections cfg.settings;
 
-        "systemd/sleep.conf".text = ''
-          [Sleep]
-          ${cfg.sleep.extraConfig}
-        '';
+        "systemd/sleep.conf".text = settingsToSections cfg.sleep.settings;
 
         "systemd/user-generators" = {
           source = hooks "user-generators" cfg.user.generators;
@@ -666,6 +667,8 @@ in
 
         "systemd/system-environment-generators/env-generator".source =
           "${config.system.nixos-init.package}/bin/env-generator";
+
+        "sysctl.d/50-default.conf".source = "${cfg.package}/example/sysctl.d/50-default.conf";
       };
 
     services.dbus.enable = true;
@@ -851,6 +854,16 @@ in
       };
     };
 
+    # Remove with systemd 259.4
+    security.polkit.extraConfig = mkIf config.security.polkit.enable ''
+      polkit.addRule(function(action, subject) {
+          if (action.id == "org.freedesktop.machine1.register-machine" &&
+              subject.user != "root") {
+              return polkit.Result.AUTH_ADMIN_KEEP;
+          }
+      });
+    '';
+
     # run0 is supposed to authenticate the user via polkit and then run a command. Without this next
     # part, run0 would fail to run the command even if authentication is successful and the user has
     # permission to run the command. This next part is only enabled if polkit is enabled because the
@@ -878,6 +891,11 @@ in
       NixOS does not officially support this configuration and might cause your system to be unbootable in future versions. You are on your own.
     '')
     (mkRemovedOptionModule [ "systemd" "extraConfig" ] "Use systemd.settings.Manager instead.")
+    (mkRemovedOptionModule [
+      "systemd"
+      "sleep"
+      "extraConfig"
+    ] "Use systemd.sleep.settings.Sleep instead.")
     (lib.mkRenamedOptionModule
       [ "systemd" "watchdog" "device" ]
       [ "systemd" "settings" "Manager" "WatchdogDevice" ]

@@ -18,16 +18,16 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "asusctl";
-  version = "6.3.3";
+  version = "6.3.5";
 
   src = fetchFromGitLab {
     owner = "asus-linux";
     repo = "asusctl";
     tag = finalAttrs.version;
-    hash = "sha256-nc6pGxLutxKyd4LiI23e7UfWK45aQiLQRKL6zX7rVO0=";
+    hash = "sha256-99SLaDJm+stakrUmlyWznAeYKeD5SXeLAqakrmpalbc=";
   };
 
-  cargoHash = "sha256-LZsSnIGTemu+SvJxszPWkA5EIdu8XzruZXaYIibV31Q=";
+  cargoHash = "sha256-f6Zut4oknNCKmd5Igt08se2EpCLLmmIQjD02wj2lMQg=";
 
   postPatch = ''
     files="
@@ -53,7 +53,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     substituteInPlace Makefile \
       --replace-fail /usr/bin/grep ${lib.getExe gnugrep}
 
-    substituteInPlace /build/asusctl-${finalAttrs.version}-vendor/sg-0.4.0/build.rs \
+    substituteInPlace /build/asusctl-${finalAttrs.version}-vendor/source-*/sg-*/build.rs \
       --replace-fail /usr/include ${lib.getDev glibc}/include
   '';
 

@@ -604,7 +604,7 @@ with self;
     propagatedBuildInputs = [
       pkgs.pkg-config
       pkgs.gtk3
-      pkgs.wxGTK32
+      pkgs.wxwidgets_3_2
       ModulePluggable
     ];
     buildInputs = [ LWPProtocolHttps ];
@@ -7428,10 +7428,10 @@ with self;
 
   CryptURandom = buildPerlPackage {
     pname = "Crypt-URandom";
-    version = "0.54";
+    version = "0.55";
     src = fetchurl {
-      url = "mirror://cpan/authors/id/D/DD/DDICK/Crypt-URandom-0.54.tar.gz";
-      hash = "sha256-SnPNOUkzMo2khKrrhkXXNbNUZd9gEJ5VngoosGYFOlc=";
+      url = "mirror://cpan/authors/id/D/DD/DDICK/Crypt-URandom-0.55.tar.gz";
+      hash = "sha256-759EFBBzwTVz6FsUj/mpCJxFglt9ZgjYMuQmOJnTotQ=";
     };
     meta = {
       description = "Provide non blocking randomness";
@@ -18495,6 +18495,14 @@ with self;
     ];
     nativeBuildInputs = [
       pkgs.makeWrapper
+    ];
+    patches = [
+      # backport LaTeXML 0.9 fix for Unicode 16.0 change
+      (fetchpatch {
+        url = "https://github.com/brucemiller/latexml/commit/4175d31afc8da61039adffaf8e42657196bff071.patch";
+        hash = "sha256-QimM8F9Jz8xYT/5q5C+YcGyVyNmDeQPE6/qVHaFfevE=";
+        includes = [ "lib/LaTeXML/Common/Font.pm" ];
+      })
     ];
     makeMakerFlags = [
       "TEXMF=\${tex}"
@@ -32531,12 +32539,12 @@ with self;
 
   SysVirt = buildPerlModule rec {
     pname = "Sys-Virt";
-    version = "11.6.0";
+    version = "12.1.0";
     src = fetchFromGitLab {
       owner = "libvirt";
       repo = "libvirt-perl";
       tag = "v${version}";
-      hash = "sha256-a3c+ESUkpfaxJ6wuwgCRUoX5+N2KmpqXBgNNVqYZ/T0=";
+      hash = "sha256-WjTDvmnj1i1hoC6dska1VEJOiKi+obPjGlO7T2Now+U=";
     };
     nativeBuildInputs = [ pkgs.pkg-config ];
     buildInputs = [

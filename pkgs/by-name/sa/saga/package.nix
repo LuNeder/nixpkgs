@@ -30,13 +30,13 @@
   proj,
   qhull,
   vigra,
-  wxGTK32,
+  wxwidgets_3_2,
   xz,
   # darwin-specific
   netcdf,
   poppler,
   sqlite,
-  unixODBC,
+  unixodbc,
 
   cudaSupport ? config.cudaSupport,
 }:
@@ -85,7 +85,7 @@ stdenv.mkDerivation (finalAttrs: {
     proj
     qhull
     vigra
-    wxGTK32
+    wxwidgets_3_2
     xz
   ]
   ++ lib.optionals cudaSupport [
@@ -97,7 +97,7 @@ stdenv.mkDerivation (finalAttrs: {
     netcdf
     poppler
     sqlite
-    unixODBC
+    unixodbc
   ];
 
   cmakeFlags = [

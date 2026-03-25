@@ -241,98 +241,25 @@ rec {
       meta.mainProgram = name;
     };
 
-  # TODO: move parameter documentation to the Nixpkgs manual
   # See doc/build-helpers/trivial-build-helpers.chapter.md
   # or https://nixos.org/manual/nixpkgs/unstable/#trivial-builder-writeShellApplication
   writeShellApplication =
     {
-      /*
-         The name of the script to write.
-
-         Type: String
-      */
       name,
-      /*
-         The shell script's text, not including a shebang.
-
-         Type: String
-      */
       text,
-      /*
-         Inputs to add to the shell script's `$PATH` at runtime.
-
-         Type: [String|Derivation]
-      */
       runtimeInputs ? [ ],
-      /*
-         Extra environment variables to set at runtime.
-
-         Type: AttrSet
-      */
       runtimeEnv ? null,
-      /*
-         `stdenv.mkDerivation`'s `meta` argument.
-
-         Type: AttrSet
-      */
       meta ? { },
-      /*
-         `stdenv.mkDerivation`'s `passthru` argument.
-
-         Type: AttrSet
-      */
       passthru ? { },
-      /*
-         The `checkPhase` to run. Defaults to `shellcheck` on supported
-         platforms and `bash -n`.
-
-         The script path will be given as `$target` in the `checkPhase`.
-
-         Type: String
-      */
       checkPhase ? null,
-      /*
-         Checks to exclude when running `shellcheck`, e.g. `[ "SC2016" ]`.
-
-         See <https://www.shellcheck.net/wiki/> for a list of checks.
-
-         Type: [String]
-      */
       excludeShellChecks ? [ ],
-      /*
-         Extra command-line flags to pass to ShellCheck.
-
-         Type: [String]
-      */
       extraShellCheckFlags ? [ ],
-      /*
-         Bash options to activate with `set -o` at the start of the script.
-
-         Defaults to `[ "errexit" "nounset" "pipefail" ]`.
-
-         Type: [String]
-      */
       bashOptions ? [
         "errexit"
         "nounset"
         "pipefail"
       ],
-      /*
-        Extra arguments to pass to `stdenv.mkDerivation`.
-
-        :::{.caution}
-        Certain derivation attributes are used internally,
-        overriding those could cause problems.
-        :::
-
-        Type: AttrSet
-      */
       derivationArgs ? { },
-      /*
-         Whether to inherit the current `$PATH` in the script.
-
-         Type: Bool
-      */
       inheritPath ? true,
     }@args:
     writeTextFile {
@@ -356,10 +283,16 @@ rec {
           export ${name}
         '') runtimeEnv
       )
-      + lib.optionalString (runtimeInputs != [ ]) ''
+      + ''
 
-        export PATH="${lib.makeBinPath runtimeInputs}${lib.optionalString inheritPath ":$PATH"}"
+        export PATH="${
+          lib.concatStringsSep ":" (
+            (lib.optionals (runtimeInputs != [ ]) [ (lib.makeBinPath runtimeInputs) ])
+            ++ (lib.optionals inheritPath [ "$PATH" ])
+          )
+        }"
       ''
+
       + ''
 
         ${text}
@@ -935,67 +868,93 @@ rec {
 
   # Docs in doc/build-helpers/fetchers.chapter.md
   # See https://nixos.org/manual/nixpkgs/unstable/#requirefile
-  requireFile =
-    {
-      name ? null,
-      sha256 ? null,
-      sha1 ? null,
-      hash ? null,
-      url ? null,
-      message ? null,
-      hashMode ? "flat",
-    }:
-    assert (message != null) || (url != null);
-    assert (sha256 != null) || (sha1 != null) || (hash != null);
-    assert (name != null) || (url != null);
-    let
-      msg =
-        if message != null then
-          message
-        else
-          ''
-            Unfortunately, we cannot download file ${name_} automatically.
-            Please go to ${url} to download it yourself, and add it to the Nix store
-            using either
-              nix-store --add-fixed ${hashAlgo} ${name_}
-            or
-              nix-prefetch-url --type ${hashAlgo} file:///path/to/${name_}
-          '';
-      hashAlgo =
-        if hash != null then
-          (builtins.head (lib.strings.splitString "-" hash))
-        else if sha256 != null then
-          "sha256"
-        else
-          "sha1";
-      hashAlgo_ = if hash != null then "" else hashAlgo;
-      hash_ =
-        if hash != null then
-          hash
-        else if sha256 != null then
-          sha256
-        else
-          sha1;
-      name_ = if name == null then baseNameOf (toString url) else name;
-    in
-    stdenvNoCC.mkDerivation {
-      name = name_;
-      outputHashMode = hashMode;
-      outputHashAlgo = hashAlgo_;
-      outputHash = hash_;
-      preferLocalBuild = true;
-      builder = writeScript "restrict-message" ''
-        source ${stdenvNoCC}/setup
-        cat <<_EOF_
+  requireFile = lib.extendMkDerivation {
+    constructDrv = stdenv.mkDerivation;
 
-        ***
-        ${msg}
-        ***
+    excludeDrvArgNames = [
+      "hash"
+      "hashMode"
+      "message"
+      "sha1"
+      "sha256"
+      "url"
+    ];
 
-        _EOF_
-        exit 1
-      '';
-    };
+    extendDrvArgs =
+      finalAttrs:
+      {
+        name ? null,
+        sha256 ? null,
+        sha1 ? null,
+        hash ? null,
+        url ? null,
+        message ? null,
+        hashMode ? "flat",
+      }@args:
+      assert (message != null) || (url != null);
+      assert (sha256 != null) || (sha1 != null) || (hash != null);
+      assert (name != null) || (url != null);
+      let
+        msg =
+          if message != null then
+            message
+          else
+            ''
+              Unfortunately, we cannot download file ${name_} automatically.
+              Please go to ${url} to download it yourself, and add it to the Nix store
+              using either
+                nix-store --add-fixed ${hashAlgo} ${name_}
+              or
+                nix-prefetch-url --type ${hashAlgo} file:///path/to/${name_}
+            '';
+        hashAlgo =
+          if hash != null then
+            (builtins.head (lib.strings.splitString "-" hash))
+          else if sha256 != null then
+            "sha256"
+          else
+            "sha1";
+        hashAlgo_ = if hash != null then "" else hashAlgo;
+        hash_ =
+          if hash != null then
+            hash
+          else if sha256 != null then
+            sha256
+          else
+            sha1;
+        name_ = if name == null then baseNameOf (toString url) else name;
+      in
+      {
+        outputHashMode = hashMode;
+        outputHashAlgo = hashAlgo_;
+        outputHash = hash_;
+        preferLocalBuild = true;
+        builder = writeScript "restrict-message" ''
+          source ${stdenvNoCC}/setup
+          cat <<_EOF_
+
+          ***
+          ${msg}
+          ***
+
+          _EOF_
+          exit 1
+        '';
+      }
+      // (lib.optionalAttrs (name == null) {
+        # The case of providing `url`, but not `name`. This has
+        # weird interactions with the positioning system
+
+        # When we set `name` explicitly here, we override where the
+        # position is read from. So we must fix it here.
+        pos = lib.unsafeGetAttrPos "url" args;
+
+        # If a name is not provided, use the basename of the url
+        name = builtins.warn "providing a URL without a name is deprecated" baseNameOf (toString url);
+      });
+
+    inheritFunctionArgs = false;
+  };
 
   # TODO: move copyPathToStore docs to the Nixpkgs manual
   /*

@@ -3,34 +3,36 @@
   stdenv,
   fetchFromGitHub,
   rustPlatform,
-  cargo-tauri_1,
+  cargo-tauri,
   cinny,
   desktop-file-utils,
   wrapGAppsHook3,
+  makeBinaryWrapper,
   pkg-config,
   openssl,
   glib-networking,
   webkitgtk_4_1,
   jq,
   moreutils,
+  nix-update-script,
+  _experimental-update-script-combinators,
 }:
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "cinny-desktop";
   # We have to be using the same version as cinny-web or this isn't going to work.
-  version = "4.10.5";
+  version = "4.11.1";
 
-  # nixpkgs-update: no auto update
   src = fetchFromGitHub {
     owner = "cinnyapp";
     repo = "cinny-desktop";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-DRSafPNED9fpm3w5K4a9r8581xMpttfo7BEDBIJ87Kc=";
+    hash = "sha256-/zHXlAqIxWN1obFO3H/eqFj38pjopF4D5ooz0YiVgD0=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/src-tauri";
 
-  cargoHash = "sha256-q6YMAjK+BBYBpk8menA1sM3x/FCnAh40t70fs9knnRo=";
+  cargoHash = "sha256-bchjUTC0/hWPf/cOs+cxRbqho/B9LMJ3ChW530zEoXU=";
 
   postPatch =
     let
@@ -46,20 +48,20 @@ rustPlatform.buildRustPackage (finalAttrs: {
     in
     ''
       ${lib.getExe jq} \
-        'del(.tauri.updater) | .build.distDir = "${cinny'}" | del(.build.beforeBuildCommand)' tauri.conf.json \
+        'del(.plugins.tauri.updater) | .build.frontendDist = "${cinny'}" | del(.build.beforeBuildCommand) | .bundle.createUpdaterArtifacts = false' tauri.conf.json \
         | ${lib.getExe' moreutils "sponge"} tauri.conf.json
     '';
 
   postInstall =
     lib.optionalString stdenv.hostPlatform.isDarwin ''
       mkdir -p "$out/bin"
-      ln -sf "$out/Applications/Cinny.app/Contents/MacOS/Cinny" "$out/bin/cinny"
+      makeWrapper "$out/Applications/Cinny.app/Contents/MacOS/Cinny" "$out/bin/cinny"
     ''
     + lib.optionalString stdenv.hostPlatform.isLinux ''
       desktop-file-edit \
         --set-comment "Yet another matrix client for desktop" \
         --set-key="Categories" --set-value="Network;InstantMessaging;" \
-        $out/share/applications/cinny.desktop
+        $out/share/applications/Cinny.desktop
     '';
 
   preFixup = ''
@@ -69,12 +71,15 @@ rustPlatform.buildRustPackage (finalAttrs: {
   '';
 
   nativeBuildInputs = [
-    cargo-tauri_1.hook
+    cargo-tauri.hook
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [
     desktop-file-utils
     pkg-config
     wrapGAppsHook3
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [
+    makeBinaryWrapper
   ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
@@ -82,6 +87,13 @@ rustPlatform.buildRustPackage (finalAttrs: {
     openssl
     webkitgtk_4_1
   ];
+
+  passthru = {
+    updateScript = _experimental-update-script-combinators.sequence [
+      (nix-update-script { attrPath = "cinny-unwrapped"; })
+      (nix-update-script { })
+    ];
+  };
 
   meta = {
     description = "Yet another matrix client for desktop";
@@ -94,8 +106,5 @@ rustPlatform.buildRustPackage (finalAttrs: {
     license = lib.licenses.agpl3Only;
     platforms = lib.platforms.linux ++ lib.platforms.darwin;
     mainProgram = "cinny";
-    # Waiting for update to Tauri v2, webkitgtk_4_0 is deprecated
-    # See https://github.com/cinnyapp/cinny-desktop/issues/398 and https://github.com/NixOS/nixpkgs/pull/450065
-    broken = stdenv.hostPlatform.isLinux;
   };
 })

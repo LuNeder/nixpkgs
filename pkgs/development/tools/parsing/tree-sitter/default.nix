@@ -6,6 +6,7 @@
   fetchFromGitLab,
   fetchFromSourcehut,
   fetchFromCodeberg,
+  fetchpatch,
   nix-update-script,
   which,
   rustPlatform,
@@ -20,9 +21,6 @@
   enableShared ? !stdenv.hostPlatform.isStatic,
   enableStatic ? stdenv.hostPlatform.isStatic,
   webUISupport ? false,
-
-  # tests
-  lunarvim,
 }:
 
 let
@@ -58,6 +56,7 @@ let
       fetchFromGitLab
       fetchFromSourcehut
       fetchFromCodeberg
+      fetchpatch
       ;
   };
 
@@ -143,6 +142,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
     (substitute {
       src = ./remove-web-interface.patch;
     })
+    (fetchpatch {
+      name = "feat: allow `-` in grammar names";
+      url = "https://github.com/tree-sitter/tree-sitter/commit/7d3c32125379c1dc02f47277bcd4eceaac299bdb.diff";
+      hash = "sha256-ZNjdNateHVHDy0/txlAW8TUdz+DVxLKXpw8ojZbIQS8=";
+    })
   ];
 
   postPatch =
@@ -172,6 +176,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
     PREFIX=$out make install
     ${lib.optionalString (!enableShared) "rm -f $out/lib/*.so{,.*}"}
     ${lib.optionalString (!enableStatic) "rm -f $out/lib/*.a"}
+
+    mv docs/src/assets/schemas/config.schema.json $out/
   ''
   + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
     installShellCompletion --cmd tree-sitter \
@@ -204,8 +210,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
     tests = {
       # make sure all grammars build
       builtGrammars = lib.recurseIntoAttrs builtGrammars;
-
-      inherit lunarvim;
     };
   };
 

@@ -4,9 +4,11 @@
   rustPlatform,
   fetchFromGitHub,
   installShellFiles,
+  cargo,
   clang,
   cmake,
   gitMinimal,
+  libcap,
   libclang,
   makeBinaryWrapper,
   nix-update-script,
@@ -18,18 +20,30 @@
 }:
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "codex";
-  version = "0.92.0";
+  version = "0.115.0";
 
   src = fetchFromGitHub {
     owner = "openai";
     repo = "codex";
     tag = "rust-v${finalAttrs.version}";
-    hash = "sha256-m/g+5wdehyaHDw6i5vik4HXiisY/iWFtPX0gKjCFPNY=";
+    hash = "sha256-8l5OZQS6L1uhVpqZZGx2O3Xt6qTaTAYDR5XWOydTVuQ=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/codex-rs";
 
-  cargoHash = "sha256-fuT8vPb9/7fZam129nR6y+r+3j46WBhlf73Htkcjpzc=";
+  # TODO: Drop workaround once PR #486983 reaches master.
+  depsExtraArgs = {
+    nativeBuildInputs = [ cargo ];
+    postBuild = ''
+      # delete all Cargo.toml files for which `cargo metadata` fails
+      shopt -s globstar
+      for manifest_path in "$out"/**/Cargo.toml; do
+        cargo metadata --format-version 1 --no-deps --manifest-path "$manifest_path" >/dev/null || rm -v "$manifest_path"
+      done
+    '';
+  };
+
+  cargoHash = "sha256-7lp6QslpGPXtDXVvlg/+m6LrLV/Ygd1FcjtlMviE3oM=";
 
   nativeBuildInputs = [
     clang
@@ -43,6 +57,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
   buildInputs = [
     libclang
     openssl
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [
+    libcap
   ];
 
   # NOTE: set LIBCLANG_PATH so bindgen can locate libclang, and adjust
@@ -86,6 +103,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   passthru = {
     updateScript = nix-update-script {
       extraArgs = [
+        "--use-github-releases"
         "--version-regex"
         "^rust-v(\\d+\\.\\d+\\.\\d+)$"
       ];
@@ -99,8 +117,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
     license = lib.licenses.asl20;
     mainProgram = "codex";
     maintainers = with lib.maintainers; [
-      malo
       delafthi
+      jeafleohj
+      malo
     ];
     platforms = lib.platforms.unix;
   };

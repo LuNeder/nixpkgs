@@ -686,6 +686,8 @@ let
 
         frontc = callPackage ../development/ocaml-modules/frontc { };
 
+        fs-io = callPackage ../development/ocaml-modules/fs-io { };
+
         functory = callPackage ../development/ocaml-modules/functory { };
 
         ### G ###
@@ -816,6 +818,8 @@ let
         hmap = callPackage ../development/ocaml-modules/hmap { };
 
         hpack = callPackage ../development/ocaml-modules/hpack { };
+
+        htmlit = callPackage ../development/ocaml-modules/htmlit { };
 
         http = callPackage ../development/ocaml-modules/cohttp/http.nix { };
 
@@ -1215,6 +1219,8 @@ let
 
         menhir = callPackage ../development/ocaml-modules/menhir { };
 
+        menhirGLR = callPackage ../development/ocaml-modules/menhir/glr.nix { };
+
         menhirLib = callPackage ../development/ocaml-modules/menhir/lib.nix { };
 
         menhirSdk = callPackage ../development/ocaml-modules/menhir/sdk.nix { };
@@ -1372,6 +1378,8 @@ let
         mparser = callPackage ../development/ocaml-modules/mparser { };
 
         mparser-pcre = callPackage ../development/ocaml-modules/mparser/pcre.nix { };
+
+        mparser-re = callPackage ../development/ocaml-modules/mparser/re.nix { };
 
         msgpck = callPackage ../development/ocaml-modules/msgpck { };
 
@@ -2120,6 +2128,8 @@ let
         tls-mirage = callPackage ../development/ocaml-modules/tls/mirage.nix { };
 
         toml = callPackage ../development/ocaml-modules/toml { };
+
+        top-closure = callPackage ../development/ocaml-modules/top-closure { };
 
         topkg = callPackage ../development/ocaml-modules/topkg { };
 

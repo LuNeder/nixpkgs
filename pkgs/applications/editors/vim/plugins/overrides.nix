@@ -1127,6 +1127,12 @@ assertNoAdditions {
     dependencies = [ self.image-nvim ];
   };
 
+  diffs-nvim = super.diffs-nvim.overrideAttrs {
+    nvimSkipModules = [
+      "minimal_init"
+    ];
+  };
+
   diffview-nvim = super.diffview-nvim.overrideAttrs {
     dependencies = [ self.plenary-nvim ];
 
@@ -3303,6 +3309,14 @@ assertNoAdditions {
     dependencies = [ self.plenary-nvim ];
   };
 
+  screensaver-nvim = super.screensaver-nvim.overrideAttrs (old: {
+    meta = old.meta // {
+      description = "Screensaver plugin for Neovim";
+      license = lib.licenses.mit;
+      maintainers = with lib.maintainers; [ m3l6h ];
+    };
+  });
+
   scretch-nvim = super.scretch-nvim.overrideAttrs {
   };
 
@@ -4354,7 +4368,6 @@ assertNoAdditions {
       homepage = "https://github.com/Valloric/YouCompleteMe";
       license = lib.licenses.gpl3;
       maintainers = with lib.maintainers; [
-        marcweber
         mel
       ];
       platforms = lib.platforms.unix;

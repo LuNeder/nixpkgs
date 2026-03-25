@@ -83,7 +83,7 @@ def test_build_flake(mock_run: Mock, monkeypatch: MonkeyPatch, tmpdir: Path) -> 
 def test_build_remote(
     mock_uuid4: Mock, mock_run: Mock, monkeypatch: MonkeyPatch
 ) -> None:
-    build_host = m.Remote("user@host", [], None)
+    build_host = m.Remote("user@host", [], None, "ssh")
     monkeypatch.setenv("NIX_SSHOPTS", "--ssh opts")
 
     def run_wrapper_side_effect(
@@ -134,7 +134,9 @@ def test_build_remote(
                     "user@host",
                     Path("/path/to/file"),
                 ],
-                env={"NIX_SSHOPTS": " ".join(["--ssh opts", *p.SSH_DEFAULT_OPTS])},
+                append_local_env={
+                    "NIX_SSHOPTS": " ".join(["--ssh opts", *p.SSH_DEFAULT_OPTS]),
+                },
             ),
             call(
                 ["mktemp", "-d", "-t", "nixos-rebuild.XXXXX"],
@@ -169,11 +171,13 @@ def test_build_remote(
     return_value=CompletedProcess([], 0, stdout=" \n/path/to/file\n "),
 )
 def test_build_remote_flake(
-    mock_run: Mock, monkeypatch: MonkeyPatch, tmpdir: Path
+    mock_run: Mock,
+    monkeypatch: MonkeyPatch,
+    tmpdir: Path,
 ) -> None:
     monkeypatch.chdir(tmpdir)
     flake = m.Flake.parse("/flake.nix#hostname")
-    build_host = m.Remote("user@host", [], None)
+    build_host = m.Remote("user@host", [], None, "ssh")
     monkeypatch.setenv("NIX_SSHOPTS", "--ssh opts")
 
     assert n.build_remote_flake(
@@ -206,7 +210,9 @@ def test_build_remote_flake(
                     "user@host",
                     Path("/path/to/file"),
                 ],
-                env={"NIX_SSHOPTS": " ".join(["--ssh opts", *p.SSH_DEFAULT_OPTS])},
+                append_local_env={
+                    "NIX_SSHOPTS": " ".join(["--ssh opts", *p.SSH_DEFAULT_OPTS]),
+                },
             ),
             call(
                 [
@@ -231,13 +237,29 @@ def test_copy_closure(monkeypatch: MonkeyPatch) -> None:
         n.copy_closure(closure, None)
         mock_run.assert_not_called()
 
-    target_host = m.Remote("user@target.host", [], None)
-    build_host = m.Remote("user@build.host", [], None)
+    target_host = m.Remote("user@target.host", [], None, "ssh")
+    build_host = m.Remote("user@build.host", [], None, "ssh")
+    target_host_ng = m.Remote("user@target.host", [], None, "ssh-ng")
     with patch(get_qualified_name(n.run_wrapper, n), autospec=True) as mock_run:
         n.copy_closure(closure, target_host)
         mock_run.assert_called_with(
             ["nix-copy-closure", "--to", "user@target.host", closure],
-            env={"NIX_SSHOPTS": " ".join(p.SSH_DEFAULT_OPTS)},
+            append_local_env={"NIX_SSHOPTS": " ".join(p.SSH_DEFAULT_OPTS)},
+        )
+
+    with patch(get_qualified_name(n.run_wrapper, n), autospec=True) as mock_run:
+        n.copy_closure(closure, target_host_ng)
+        mock_run.assert_called_with(
+            [
+                "nix",
+                "--extra-experimental-features",
+                "nix-command flakes",
+                "copy",
+                "--to",
+                "ssh-ng://user@target.host",
+                closure,
+            ],
+            append_local_env={"NIX_SSHOPTS": " ".join(p.SSH_DEFAULT_OPTS)},
         )
 
     monkeypatch.setenv("NIX_SSHOPTS", "--ssh build-opt")
@@ -245,7 +267,9 @@ def test_copy_closure(monkeypatch: MonkeyPatch) -> None:
         n.copy_closure(closure, None, build_host, {"copy_flag": True})
         mock_run.assert_called_with(
             ["nix-copy-closure", "--copy-flag", "--from", "user@build.host", closure],
-            env={"NIX_SSHOPTS": " ".join(["--ssh build-opt", *p.SSH_DEFAULT_OPTS])},
+            append_local_env={
+                "NIX_SSHOPTS": " ".join(["--ssh build-opt", *p.SSH_DEFAULT_OPTS])
+            },
         )
 
     monkeypatch.setenv("NIX_SSHOPTS", "--ssh build-target-opt")
@@ -265,7 +289,7 @@ def test_copy_closure(monkeypatch: MonkeyPatch) -> None:
                 "ssh://user@target.host",
                 closure,
             ],
-            env=env,
+            append_local_env=env,
         )
 
 
@@ -450,7 +474,32 @@ def test_get_generations(tmp_path: Path) -> None:
     (tmp_path / "system-3-link").symlink_to(nixos_path)
     (tmp_path / "system-2-link").symlink_to(nixos_path)
 
+    # An alternate profile; this shouldn't appear.
+    (tmp_path / "custom").symlink_to(tmp_path / "custom-1-link")
+    (tmp_path / "custom-1-link").symlink_to(nixos_path)
+
     assert n.get_generations(m.Profile("system", tmp_path / "system")) == [
+        m.Generation(id=1, current=False, timestamp=ANY),
+        m.Generation(id=2, current=True, timestamp=ANY),
+        m.Generation(id=3, current=False, timestamp=ANY),
+    ]
+
+
+def test_get_generations_with_profile(tmp_path: Path) -> None:
+    nixos_path = tmp_path / "nixos-system"
+    nixos_path.mkdir()
+
+    (tmp_path / "custom").symlink_to(tmp_path / "custom-2-link")
+    # In the "wrong" order on purpose to make sure we are sorting the results
+    (tmp_path / "custom-1-link").symlink_to(nixos_path)
+    (tmp_path / "custom-3-link").symlink_to(nixos_path)
+    (tmp_path / "custom-2-link").symlink_to(nixos_path)
+
+    # An alternate profile; none of these should appear.
+    (tmp_path / "system").symlink_to(tmp_path / "system-1-link")
+    (tmp_path / "system-1-link").symlink_to(nixos_path)
+
+    assert n.get_generations(m.Profile("custom", tmp_path / "custom")) == [
         m.Generation(id=1, current=False, timestamp=ANY),
         m.Generation(id=2, current=True, timestamp=ANY),
         m.Generation(id=3, current=False, timestamp=ANY),
@@ -485,7 +534,7 @@ def test_get_generations_from_nix_env(tmp_path: Path) -> None:
             sudo=False,
         )
 
-    remote = m.Remote("user@host", [], "password")
+    remote = m.Remote("user@host", [], "password", "ssh")
     with patch(
         get_qualified_name(n.run_wrapper, n), autospec=True, return_value=return_value
     ) as mock_run:
@@ -547,7 +596,6 @@ def test_list_generations(mock_get_generations: Mock, tmp_path: Path) -> None:
 
 @patch(get_qualified_name(n.run_wrapper, n), autospec=True)
 def test_diff_closures(mock_run: Mock) -> None:
-
     n.diff_closures(
         Path("/run/current-system"), Path("/nix/var/nix/profiles/system"), None
     )
@@ -599,7 +647,7 @@ def test_rollback(mock_run: Mock, tmp_path: Path) -> None:
         sudo=False,
     )
 
-    target_host = m.Remote("user@localhost", [], None)
+    target_host = m.Remote("user@localhost", [], None, "ssh")
     assert n.rollback(profile, target_host, True) == profile.path
     mock_run.assert_called_with(
         ["nix-env", "--rollback", "-p", path],
@@ -639,7 +687,7 @@ def test_rollback_temporary_profile(tmp_path: Path) -> None:
             sudo=False,
         )
 
-        target_host = m.Remote("user@localhost", [], None)
+        target_host = m.Remote("user@localhost", [], None, "ssh")
         assert (
             n.rollback_temporary_profile(m.Profile("foo", path), target_host, True)
             == path.parent / "foo-2083-link"
@@ -737,7 +785,7 @@ def test_switch_to_configuration_without_systemd_run(
         == "error: '--specialisation' can only be used with 'switch' and 'test'"
     )
 
-    target_host = m.Remote("user@localhost", [], None)
+    target_host = m.Remote("user@localhost", [], None, "ssh")
     with monkeypatch.context() as mp:
         mp.setenv("LOCALE_ARCHIVE", "/path/to/locale")
         mp.setenv("PATH", "/path/to/bin")
@@ -800,7 +848,7 @@ def test_switch_to_configuration_with_systemd_run(
         remote=None,
     )
 
-    target_host = m.Remote("user@localhost", [], None)
+    target_host = m.Remote("user@localhost", [], None, "ssh")
     with monkeypatch.context() as mp:
         mp.setenv("LOCALE_ARCHIVE", "/path/to/locale")
         mp.setenv("PATH", "/path/to/bin")
